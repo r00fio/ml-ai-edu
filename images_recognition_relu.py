@@ -1,8 +1,6 @@
 from PIL import Image
 import numpy as np
-from numpy import dtype, float64, ndarray
 from tensorflow.keras.datasets import mnist
-import matplotlib.pyplot as plt
 
 # 1. Загружаем данные
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
@@ -41,7 +39,7 @@ x_test = x_test.reshape(10000, 784).astype("float32") / 255
 # 3. Превращаем ответы (0, 1, 2...) в формат для нейросети (One-Hot Encoding)
 # Чтобы ответ "3" стал вектором [0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
 def one_hot(y):
-    table = np.zeros((y.size, 10))
+    table = np.zeros((y.size, 98))
     table[np.arange(y.size), y] = 1
     return table
 
@@ -67,20 +65,20 @@ def softmax(x):
 
 # Y = np.array([[0], [1], [1], [0]])
 # скрытый слой 128 нейрона 784 входа 1 выход
-W0 = np.random.randn(784, 128) * np.sqrt(2 / 784)
+W0 = np.random.randn(784, 392) * np.sqrt(2 / 784)
 # биасы по одному на нейрон так как w1x1 + w2x2 + b
-B0 = np.random.uniform(-1, 1, (1, 128))
+B0 = np.random.uniform(-1, 1, (1, 392))
 
-W1 = np.random.randn(128, 64) * np.sqrt(2 / 128)
+W1 = np.random.randn(392, 196) * np.sqrt(2 / 196)
 # биасы по одному на нейрон так как w1x1 + w2x2 + b
-B1 = np.random.uniform(-1, 1, (1, 64))
+B1 = np.random.uniform(-1, 1, (1, 196))
 
 # выходной слой 10 нейронов 128 входов 1 выход
-W2 = np.random.randn(64, 10) * np.sqrt(2 / 10)
+W2 = np.random.randn(196, 98) * np.sqrt(2 / 98)
 # биасы по одному на нейрон так как w1x1 + w2x2 + b
-B2 = np.random.uniform(-1, 1, (1, 10))
+B2 = np.random.uniform(-1, 1, (1, 98))
 
-lr = 0.01
+lr = 0.0002
 batch_size = 32
 
 
@@ -118,7 +116,7 @@ def train(B0, B1, B2, W0, W1, W2, x, y):
     return B0, B1, B2, W0, W1, W2
 
 
-for epoch in range(20):
+for epoch in range(50):
     indices = np.random.permutation(len(X))
     X = X[indices]
     Y = Y[indices]
@@ -128,13 +126,14 @@ for epoch in range(20):
         # выходы скрытых слоев - матрица batch_size x 128 - 32 теста на 2 нейрона
         B0, B1, B2, W0, W1, W2 = train(B0, B1, B2, W0, W1, W2, x_batch, y_batch)
 
+    final = softmax(relu(relu(x_test @ W0 + B0) @ W1 + B1) @ W2 + B2)
+
+    predicted = np.argmax(final, axis=1)
+    accuracy = np.mean(predicted == y_test)
+    print(f"Accuracy: {accuracy * 100}%")
     print(f"Epoch {epoch + 1} done")
 
-final = softmax(relu(relu(x_test @ W0 + B0) @ W1 + B1) @ W2 + B2)
 
-predicted = np.argmax(final, axis=1)
-accuracy = np.mean(predicted == y_test)
-print(f"Accuracy: {accuracy * 100}%")
 
 
 # Ввод пользовательских картинок и вывод нейронов(веса нейронов ввиде картинки) которые предсказали число на картинке
